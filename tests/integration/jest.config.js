@@ -1,3 +1,4 @@
+/* eslint-disable */
 const jestConfigBase = require("../../jest.config");
 
 module.exports = {

@@ -8,11 +8,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code Base
-      uses: actions/checkout@v2
+      - name: Checkout Code Base
+        uses: actions/checkout@v2
 
-    - name: Install modules
-      run: yarn
+      - name: Install modules
+        run: yarn
 
-    - name: Run ESLint
-      run: yarn lint:ci
+      - name: Run ESLint
+        run: yarn lint:ci

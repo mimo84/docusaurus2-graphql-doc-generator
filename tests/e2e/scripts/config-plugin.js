@@ -1,3 +1,4 @@
+/* eslint-disable */
 const fs = require("fs");
 
 const pluginConfigFilename = "docusaurus2-graphql-doc-generator.config.json";

@@ -1,11 +1,13 @@
-const fs = require("fs-extra");
-const path = require("path");
+import * as fs from "fs-extra";
+import path from "path";
 
-const cli = require("./lib/cli");
+import cli from "./lib/cli";
 
 const rootDir = "/usr/src/app/docusaurus2";
 
-const pluginConfig = require(`${rootDir}/docusaurus2-graphql-doc-generator.config.json`);
+const pluginConfig = await import(
+  `${rootDir}/docusaurus2-graphql-doc-generator.config.json`
+);
 
 const docsDir = path.resolve(rootDir, pluginConfig.rootPath);
 

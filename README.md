@@ -106,7 +106,7 @@ npx docusaurus graphql-to-doc
 
 #### Options
 
-By default, the plugin will use the options as defined in the plugin's [configuration](#configuration), but they can be overriden by passing them with the command.
+By default, the plugin will use the options as defined in the plugin's [configuration](#configuration), but they can be overridden by passing them with the command.
 
 | Config File  | CLI Flag                    | Default            | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | ------------ | --------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

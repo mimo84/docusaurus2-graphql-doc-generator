@@ -3,7 +3,7 @@
   "homepage": "https://github.com/edno/docusaurus2-graphql-doc-generator",
   "version": "1.1.0",
   "license": "MIT",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "keywords": [
     "docusaurus2",
     "graphql",
@@ -13,9 +13,9 @@
   ],
   "author": "Gregory Heitz",
   "scripts": {
-    "prettier": "prettier --write \"**/*.{js,json,md}\"",
-    "lint": "eslint --cache \"**/*.js\" --fix",
-    "lint:ci": "eslint \"**/*.js\"",
+    "prettier": "prettier --write .",
+    "lint": "eslint --cache --fix .",
+    "lint:ci": "eslint .",
     "danger": "danger local -b main --failOnErrors",
     "danger:ci": "danger ci -b main",
     "test": "jest",
@@ -46,6 +46,7 @@
     "chalk": "4.1.0",
     "fs-extra": "9.0.1",
     "graphql": "15.4.0",
+    "graphql-tools": "7.0.2",
     "import": "0.0.6",
     "lodash": "4.17.20",
     "moment": "2.29.1",
@@ -55,7 +56,13 @@
   "devDependencies": {
     "@stryker-mutator/core": "4.0.0",
     "@stryker-mutator/jest-runner": "4.1.1",
+    "@types/fs-extra": "9.0.4",
+    "@types/graphql": "14.5.0",
+    "@types/lodash": "4.14.165",
+    "@typescript-eslint/eslint-plugin": "4.9.0",
+    "@typescript-eslint/parser": "4.9.0",
     "colors": "1.4.0",
+    "commander": "6.2.0",
     "danger": "10.5.3",
     "diff": "5.0.0",
     "directory-tree": "2.2.5",
@@ -67,6 +74,7 @@
     "jest": "26.6.3",
     "mock-fs": "4.13.0",
     "nyc": "15.1.0",
+    "typescript": "4.1.2",
     "yarn": "1.22.10"
   },
   "prettier": {
@@ -86,6 +94,8 @@
     ]
   },
   "eslintConfig": {
+    "root": true,
+    "parser": "@typescript-eslint/parser",
     "env": {
       "node": true,
       "es6": true,
@@ -95,17 +105,19 @@
     },
     "extends": [
       "eslint:recommended",
+      "plugin:@typescript-eslint/recommended",
       "plugin:prettier/recommended",
       "prettier"
     ],
     "plugins": [
+      "@typescript-eslint",
       "jest"
     ],
     "settings": {
       "import/resolver": {
         "node": {
           "extensions": [
-            ".js"
+            ".ts"
           ]
         }
       }

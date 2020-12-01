@@ -1,5 +1,6 @@
-const path = require("path");
-const {
+import { GraphQLNamedType, GraphQLSchema } from "graphql";
+import path from "path";
+import {
   isEnumType,
   isUnionType,
   isObjectType,
@@ -14,13 +15,15 @@ const {
   getNamedType,
   isInputType,
   isListType,
-} = require("./graphql");
-const { toSlug, hasProperty, hasMethod } = require("./utils");
-const { prettifyMarkdown } = require("./prettier");
+} from "./graphql";
+import { toSlug } from "./utils";
+import { prettifyMarkdown } from "./prettier";
 
-const HEADER_SECTION_LEVEL = "###";
-const HEADER_SECTION_SUB_LEVEL = "####";
-const HEADER_SECTION_ITEM_LEVEL = "- #####";
+enum STYLE {
+  TITLE = "###",
+  SUB_TITLE = "####",
+  LIST_ITEM = "- #####",
+}
 const NO_DESCRIPTION_TEXT = "No description";
 
 const TAG = `
@@ -36,16 +39,18 @@ export const Tag = ({children, color}) => (
   </span>
 );`;
 
-module.exports = class Printer {
-  constructor(schema, baseURL, linkRoot = "/") {
-    this.schema = schema;
-    this.baseURL = baseURL;
-    this.linkRoot = linkRoot;
-  }
+export default class Printer {
+  constructor(
+    private schema: GraphQLSchema,
+    private baseURL: string,
+    private linkRoot: string = "/"
+  ) {}
 
-  toLink(type, name) {
-    let graphLQLNamedType = getNamedType(type);
-    if (isListType(type)) graphLQLNamedType = getNamedType(type.ofType);
+  toLink(type: GraphQLNamedType, name: string): string {
+    let graphLQLNamedType: GraphQLNamedType = getNamedType(type);
+    if (isListType(type)) {
+      graphLQLNamedType = getNamedType(type.ofType as GraphQLNamedType);
+    }
     let category;
     switch (true) {
       case isEnumType(graphLQLNamedType):
@@ -76,20 +81,24 @@ module.exports = class Printer {
         this.linkRoot,
         this.baseURL,
         category,
-        toSlug(graphLQLNamedType),
+        toSlug(graphLQLNamedType.toString())
       )})`;
     } else {
       return `\`${name}\``;
     }
   }
 
-  printSection(values, section, level = HEADER_SECTION_LEVEL) {
+  printSection(
+    values: any[],
+    section: string,
+    level: string = STYLE.TITLE
+  ): string {
     if (values.length > 0)
       return `${level} ${section}\n\n${this.printSectionItems(values)}\n\n`;
     return "";
   }
 
-  printSectionItems(values, level = HEADER_SECTION_SUB_LEVEL) {
+  printSectionItems(values: any[], level: string = STYLE.SUB_TITLE): string {
     if (Array.isArray(values))
       return values
         .map((v) => v && this.printSectionItem(v, level))
@@ -97,56 +106,56 @@ module.exports = class Printer {
     return "";
   }
 
-  printSectionItem(type, level = HEADER_SECTION_SUB_LEVEL) {
+  printSectionItem(type: any, level: string = STYLE.SUB_TITLE): string {
     if (!type) {
       return "";
     }
 
-    let section = `${level} ${this.toLink(type, getTypeName(type))} ${
-      hasProperty(type, "type")
-        ? `(${this.toLink(type.type, getTypeName(type.type))})`
+    let section = `${level} ${this.toLink(type, getTypeName(type) as string)} ${
+      "type" in type
+        ? `(${this.toLink(type.type, getTypeName(type.type) as string)})`
         : ""
     }\n\n${this.printDescription(type, "")}\n`;
     if (isParametrizedField(type)) {
-      section += this.printSectionItems(type.args, HEADER_SECTION_ITEM_LEVEL);
+      section += this.printSectionItems(type.args, STYLE.LIST_ITEM);
     }
     return section;
   }
 
-  printCodeEnum(type) {
+  printCodeEnum(type: GraphQLNamedType): string {
     let code = "";
     if (isEnumType(type)) {
       code += `enum ${getTypeName(type)} {\n`;
       code += type
         .getValues()
-        .map((v) => `  ${getTypeName(v)}`)
+        .map((v: any) => `  ${getTypeName(v)}`)
         .join("\n");
       code += `\n}`;
     }
     return code;
   }
 
-  printCodeUnion(type) {
+  printCodeUnion(type: GraphQLNamedType): string {
     let code = "";
     if (isUnionType(type)) {
       code += `union ${getTypeName(type)} = `;
       code += type
         .getTypes()
-        .map((v) => getTypeName(v))
+        .map((v: any) => getTypeName(v))
         .join(" | ");
     }
     return code;
   }
 
-  printCodeScalar(type) {
+  printCodeScalar(type: GraphQLNamedType): string {
     return `scalar ${getTypeName(type)}`;
   }
 
-  printCodeArguments(type) {
+  printCodeArguments(type: any): string {
     let code = "";
-    if (hasProperty(type, "args") && type.args.length > 0) {
+    if (isParametrizedField(type)) {
       code += `(\n`;
-      code += type.args.reduce((r, v) => {
+      code += type.args.reduce((r: any, v: any) => {
         const defaultValue = getDefaultValue(v);
         return `${r}  ${v.name}: ${v.type.toString()}${
           defaultValue ? ` = ${defaultValue}` : ""
@@ -157,28 +166,28 @@ module.exports = class Printer {
     return code;
   }
 
-  printCodeField(type) {
+  printCodeField(type: any): string {
     let code = `${getTypeName(type)}`;
     code += this.printCodeArguments(type);
     code += `: ${getTypeName(type.type)}\n`;
     return code;
   }
 
-  printCodeDirective(type) {
+  printCodeDirective(type: GraphQLNamedType): string {
     let code = `directive @${getTypeName(type)}`;
     code += this.printCodeArguments(type);
     return code;
   }
 
-  printCodeType(type) {
+  printCodeType(type: GraphQLNamedType): string {
     let code = `${isInterfaceType(type) ? "interface" : "type"} ${getTypeName(
-      type,
+      type
     )}`;
     code += `${
-      hasMethod(type, "getInterfaces") && type.getInterfaces().length > 0
+      "getInterfaces" in type && type.getInterfaces().length > 0
         ? ` implements ${type
             .getInterfaces()
-            .map((v) => getTypeName(v))
+            .map((v: any) => getTypeName(v))
             .join(", ")}`
         : ""
     }`;
@@ -191,28 +200,33 @@ module.exports = class Printer {
     return code;
   }
 
-  printHeader(id, title) {
+  printHeader(id: string, title: string): string {
     return `---\nid: ${id}\ntitle: ${title}\n---\n`;
   }
 
-  printDeprecation(type) {
-    if (type.isDeprecated) {
-      return `<sub><sup><Tag color="#ffba00">DEPRECATED</Tag> ${type.deprecationReason}</sup></sub>\n\n`;
+  printDeprecation(type: GraphQLNamedType): string {
+    if ("isDeprecated" in type) {
+      return `<sub><sup><Tag color="#ffba00">DEPRECATED</Tag> ${
+        (type as any).deprecationReason
+      }</sup></sub>\n\n`;
     }
     return "";
   }
 
-  printDescription(type, noText = NO_DESCRIPTION_TEXT) {
+  printDescription(
+    type: GraphQLNamedType,
+    noText: string = NO_DESCRIPTION_TEXT
+  ): string {
     let description = "";
 
     description = `${this.printDeprecation(type)}${
-      (hasProperty(type, "description") && type.description) || noText
+      type?.description || noText
     }`;
 
     return description;
   }
 
-  printCode(type) {
+  printCode(type: GraphQLNamedType): string {
     let code = "\n```graphql\n";
     switch (true) {
       case isEnumType(type):
@@ -242,12 +256,12 @@ module.exports = class Printer {
     return code;
   }
 
-  printType(name, type) {
+  printType(name: string, type: GraphQLNamedType): string {
     if (!type) {
       return "";
     }
 
-    const header = this.printHeader(name, getTypeName(type));
+    const header = this.printHeader(name, getTypeName(type) as string);
     const description = this.printDescription(type);
     const code = this.printCode(type);
 
@@ -262,14 +276,17 @@ module.exports = class Printer {
 
     if (isObjectType(type) || isInterfaceType(type) || isInputType(type)) {
       metadata = this.printSection(getFields(type), "Fields");
-      if (hasMethod(type, "getInterfaces")) {
+      if ("getInterfaces" in type) {
         metadata += this.printSection(type.getInterfaces(), "Interfaces");
       }
     }
 
     if (isOperation(type)) {
-      metadata = this.printSection(type.args, "Arguments");
-      const queryType = getTypeName(type.type).replace(/[![\]]*/g, "");
+      metadata = this.printSection((type as any).args, "Arguments");
+      const queryType = (getTypeName((type as any).type) as string).replace(
+        /[![\]]*/g,
+        ""
+      );
       metadata += this.printSection([this.schema.getType(queryType)], "Type");
     }
 
@@ -278,7 +295,7 @@ module.exports = class Printer {
     }
 
     return prettifyMarkdown(
-      `${header}\n\n${TAG}\n\n${description}\n\n${code}\n\n${metadata}\n\n`,
+      `${header}\n\n${TAG}\n\n${description}\n\n${code}\n\n${metadata}\n\n`
     );
   }
-};
+}

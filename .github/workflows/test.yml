@@ -8,20 +8,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code Base
-      uses: actions/checkout@v2
+      - name: Checkout Code Base
+        uses: actions/checkout@v2
 
-    - name: Install modules
-      run: yarn
+      - name: Install modules
+        run: yarn
 
-    - name: Run Unit Tests
-      run: yarn test:ci --projects tests/unit
+      - name: Run Unit Tests
+        run: yarn test:ci --projects tests/unit
 
-    - name: Run Integration Tests
-      run: yarn test:ci --projects tests/integration
+      - name: Run Integration Tests
+        run: yarn test:ci --projects tests/integration
 
-    - name: Check Code Coverage
-      run: yarn test:coverage
+      - name: Check Code Coverage
+        run: yarn test:coverage
 
   e2e:
     name: E2E Tests

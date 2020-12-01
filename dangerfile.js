@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 require("colors");
 const { danger, fail, warn, schedule } = require("danger");
 const Diff = require("diff");
