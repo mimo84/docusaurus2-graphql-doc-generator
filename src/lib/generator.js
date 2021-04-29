@@ -20,9 +20,9 @@ const time = process.hrtime();
 module.exports = async function generateDocFromSchema(
   baseURL,
   schemaLocation,
-  outputDir,
+  rootPath,
   linkRoot,
-  homepageLocation,
+  homePage,
   diffMethod,
   tmpDir,
 ) {
@@ -34,8 +34,8 @@ module.exports = async function generateDocFromSchema(
     if (await checkSchemaChanges(schema, tmpDir, diffMethod)) {
       let pages = [];
       const r = new Renderer(
-        new Printer(schema, baseURL, linkRoot),
-        outputDir,
+        new Printer(schema, baseURL, linkRoot, rootPath),
+        rootPath,
         baseURL,
       );
       const rootTypes = getSchemaMap(schema);
@@ -47,14 +47,14 @@ module.exports = async function generateDocFromSchema(
         .then((p) => {
           pages = p.reduce((r, i) => [].concat(r, i), []);
         })
-        .then(async () => await r.renderHomepage(homepageLocation))
+        .then(async () => await r.renderHomepage(homePage))
         .then(async () => await r.renderSidebar(pages))
         .then((sidebarPath) => {
           const [sec, msec] = process.hrtime(time);
           const duration = round(sec + msec / 1000000000, 3);
           console.info(
             chalk.green(
-              `Documentation successfully generated in "${outputDir}" with base URL "${baseURL}".`,
+              `Documentation successfully generated in "${rootPath}" with base URL "${baseURL}".`,
             ),
           );
           console.log(
