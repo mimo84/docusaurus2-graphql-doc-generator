@@ -9,22 +9,22 @@ const SIDEBAR = "sidebar-schema.js";
 const HOMEPAGE_ID = "schema";
 
 module.exports = class Renderer {
-  constructor(printer, outputDir, baseURL) {
-    this.outputDir = outputDir;
+  constructor(printer, rootPath, baseURL) {
+    this.rootPath = rootPath;
     this.baseURL = baseURL;
     this.p = printer;
-    this.emptyOutputDir();
+    this.emptyRootPath();
   }
 
-  emptyOutputDir() {
-    fs.emptyDirSync(this.outputDir);
+  emptyRootPath() {
+    fs.emptyDirSync(this.rootPath);
   }
 
   async renderRootTypes(name, type) {
     let pages = [];
     if (type) {
       const slug = toSlug(name);
-      const dirPath = path.join(this.outputDir, slug);
+      const dirPath = path.join(this.rootPath, slug);
       if (Array.isArray(type)) {
         type = type.reduce(function (r, o) {
           if (o && o.name) r[o.name] = o;
@@ -52,7 +52,7 @@ module.exports = class Renderer {
       const content = this.p.printType(fileName, type);
       await fs.outputFile(filePath, content, "utf8");
       const page = path
-        .relative(this.outputDir, filePath)
+        .relative(this.rootPath, filePath)
         .match(
           /(?<category>[A-z][A-z0-9-]*)\/(?<pageId>[A-z][A-z0-9-]*).mdx?$/,
         );
@@ -62,7 +62,7 @@ module.exports = class Renderer {
   }
 
   async renderSidebar(pages) {
-    const filePath = path.join(this.outputDir, SIDEBAR);
+    const filePath = path.join(this.rootPath, SIDEBAR);
     const content = prettifyJavascript(`module.exports = {
           schemaSidebar:
           ${JSON.stringify(this.generateSidebar(pages))}
@@ -95,7 +95,7 @@ module.exports = class Renderer {
 
   async renderHomepage(homepageLocation) {
     const homePage = path.basename(homepageLocation);
-    const destLocation = path.join(this.outputDir, homePage);
+    const destLocation = path.join(this.rootPath, homePage);
     fs.copySync(homepageLocation, destLocation);
     const data = fs
       .readFileSync(destLocation, "utf8")
