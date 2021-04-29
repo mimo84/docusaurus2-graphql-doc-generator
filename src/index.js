@@ -52,22 +52,26 @@ module.exports = function pluginGraphQLDocGenerator(context, opts) {
         )
         .description("Generate GraphQL Schema Documentation")
         .action(async (options) => {
-          const baseURL = options.base;
-          const linkRoot = options.link;
-          const schema = options.schema;
-          const rootPath = path.join(options.root, baseURL);
-          const homepage = options.homepage;
-          const diffMethod = options.force ? "FORCE" : options.diff;
-          const tmpDir = options.tmp;
-          await generateDocFromSchema(
-            baseURL,
-            schema,
-            rootPath,
-            linkRoot,
-            homepage,
-            diffMethod,
-            tmpDir,
-          );
+          const opts = Array.isArray(options) ? options : [options];
+          for (let option of opts) {
+            const baseURL = option.base;
+            const linkRoot = option.link;
+            const schemaLocation = option.schema;
+            const rootPath = path.join(option.root, baseURL);
+            const homepage = option.homepage;
+            const diffMethod = option.force ? "FORCE" : option.diff;
+            const tmpDir = option.tmp;
+
+            await generateDocFromSchema(
+              baseURL,
+              schemaLocation,
+              rootPath,
+              linkRoot,
+              homepage,
+              diffMethod,
+              tmpDir,
+            );
+          }
         });
     },
   };
