@@ -37,10 +37,11 @@ export const Tag = ({children, color}) => (
 );`;
 
 module.exports = class Printer {
-  constructor(schema, baseURL, linkRoot = "/") {
+  constructor(schema, baseURL, linkRoot = "/", rootPath) {
     this.schema = schema;
     this.baseURL = baseURL;
     this.linkRoot = linkRoot;
+    this.rootPath = rootPath;
   }
 
   toLink(type, name) {
@@ -74,7 +75,7 @@ module.exports = class Printer {
     if (category && graphLQLNamedType) {
       return `[\`${name}\`](${path.join(
         this.linkRoot,
-        this.baseURL,
+        this.rootPath,
         category,
         toSlug(graphLQLNamedType),
       )})`;
